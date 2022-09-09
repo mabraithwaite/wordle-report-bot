@@ -45,7 +45,7 @@ export class LastWeekStatsStrategy extends BaseStrategy {
     }
 
     private getMedal(index: number): string {
-        switch(index) {
+        switch (index) {
             case 0:
                 return '🥇 ';
             case 1:

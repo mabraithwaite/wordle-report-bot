@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+import { App } from 'aws-cdk-lib';
 import 'source-map-support/register';
-import * as cdk from 'aws-cdk-lib';
+import { SharedInfraStack } from '../lib/shared-infra-stack';
 import { WordleBotStack } from '../lib/wordle-bot-stack';
 
-const app = new cdk.App();
+const app = new App();
+const infra = new SharedInfraStack(app, 'SharedInfraStack', {});
 new WordleBotStack(app, 'WordleBotStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,

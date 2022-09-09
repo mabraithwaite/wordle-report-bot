@@ -7,6 +7,9 @@ import { WordleStat } from '../model/wordle-stat';
 import { EnvironmentVariableUtil } from '../util/env/environment-variable-util';
 
 export class StatsCollector {
+    readonly SEPT_9_2022_ISO = '2022-09-09';
+    readonly SEPT_9_2022_WORDLE_ID = 447;
+
     constructor(private dynamoClient: DynamoDBDocumentClient) {}
 
     public async getWeekStatsByDay(date: DateTime): Promise<{
@@ -104,7 +107,6 @@ export class StatsCollector {
     }
 
     private getWordleIdRange(date?: DateTime): number[] {
-        // Sep 9, 2022 was id 447
         const startDate = (date || DateTime.now()).startOf('week');
         let endDate;
         if (DateTime.now() < startDate.plus({ days: 6 })) {
@@ -112,12 +114,12 @@ export class StatsCollector {
         } else {
             endDate = startDate.plus({ days: 6 });
         }
-        const startDateId = this.getDaysSinceSept9(startDate) + 447;
-        const endDateId = this.getDaysSinceSept9(endDate) + 447;
+        const startDateId = this.getDaysSinceSept9(startDate) + this.SEPT_9_2022_WORDLE_ID;
+        const endDateId = this.getDaysSinceSept9(endDate) + this.SEPT_9_2022_WORDLE_ID;
         return [startDateId, endDateId];
     }
 
     private getDaysSinceSept9(date: DateTime): number {
-        return Math.floor(date.diff(DateTime.fromISO('2022-09-09'), 'days').days);
+        return Math.floor(date.diff(DateTime.fromISO(this.SEPT_9_2022_ISO), 'days').days);
     }
 }

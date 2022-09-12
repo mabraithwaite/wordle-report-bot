@@ -1,6 +1,7 @@
 import { DynamoDBDocumentClient, paginateQuery, paginateScan } from '@aws-sdk/lib-dynamodb';
 import { keys, mapValues } from 'lodash-es';
 import { DateTime } from 'luxon';
+import * as zipcodeToTimezone from 'zipcode-to-timezone';
 import { USER_TABLE_NAME_KEY, WORDLE_STATS_TABLE_NAME_KEY } from '../../constants/table-names';
 import { User } from '../model/user';
 import { WordleStat } from '../model/wordle-stat';
@@ -12,11 +13,14 @@ export class StatsCollector {
 
     constructor(private dynamoClient: DynamoDBDocumentClient) {}
 
-    public async getWeekStatsByDay(date: DateTime): Promise<{
+    public async getWeekStatsByDay(
+        date: DateTime,
+        zipcode: string
+    ): Promise<{
         phoneToScoreMap: { [key: string]: number };
         phoneToNameMap: { [key: string]: string };
     }> {
-        const [wordleIdStart, wordleIdEnd] = this.getWordleIdRange(date);
+        const [wordleIdStart, wordleIdEnd] = this.getWordleIdRange(date, zipcode);
         console.log(`wordleIdStart: ${wordleIdStart} wordleIdEnd: ${wordleIdEnd}`);
         const stats = await this.getAllStats(wordleIdStart, wordleIdEnd);
         const phoneToScoreMap: { [key: string]: number } = this.mapStatsToScoreMap(
@@ -106,20 +110,26 @@ export class StatsCollector {
         );
     }
 
-    private getWordleIdRange(date?: DateTime): number[] {
-        const startDate = (date || DateTime.now()).startOf('week');
+    private getWordleIdRange(date: DateTime, zipcode: string): number[] {
+        const tz = zipcodeToTimezone.lookup(zipcode) || undefined;
+        const startDate = date.setZone(tz).startOf('week');
         let endDate;
         if (DateTime.now() < startDate.plus({ days: 6 })) {
-            endDate = DateTime.now();
+            endDate = DateTime.now().setZone(tz).startOf('day');
         } else {
             endDate = startDate.plus({ days: 6 });
         }
-        const startDateId = this.getDaysSinceSept9(startDate) + this.SEPT_9_2022_WORDLE_ID;
-        const endDateId = this.getDaysSinceSept9(endDate) + this.SEPT_9_2022_WORDLE_ID;
+        const startDateId = this.getDaysSinceSept9(startDate, tz) + this.SEPT_9_2022_WORDLE_ID;
+        const endDateId = this.getDaysSinceSept9(endDate, tz) + this.SEPT_9_2022_WORDLE_ID;
         return [startDateId, endDateId];
     }
 
-    private getDaysSinceSept9(date: DateTime): number {
-        return Math.floor(date.diff(DateTime.fromISO(this.SEPT_9_2022_ISO), 'days').days);
+    private getDaysSinceSept9(date: DateTime, timezone: string | undefined): number {
+        return Math.floor(
+            date.diff(
+                DateTime.fromISO(this.SEPT_9_2022_ISO, { zone: timezone }).startOf('day'),
+                'days'
+            ).days
+        );
     }
 }

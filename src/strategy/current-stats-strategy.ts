@@ -18,7 +18,7 @@ export class CurrentStatsStrategy extends BaseStrategy {
             const dynamoClient = DynamoDbClientFactory.getDynamoDbDocumentClient();
             const { phoneToScoreMap, phoneToNameMap } = await new StatsCollector(
                 dynamoClient
-            ).getWeekStatsByDay(DateTime.now());
+            ).getWeekStatsByDay(DateTime.now(), body.FromZip);
             return this.createSuccessRes(phoneToScoreMap, phoneToNameMap);
         } catch (e: any) {
             console.error(JSON.stringify(e, null, 4));

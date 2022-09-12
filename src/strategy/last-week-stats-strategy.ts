@@ -18,7 +18,7 @@ export class LastWeekStatsStrategy extends BaseStrategy {
             const dynamoClient = DynamoDbClientFactory.getDynamoDbDocumentClient();
             const { phoneToScoreMap, phoneToNameMap } = await new StatsCollector(
                 dynamoClient
-            ).getWeekStatsByDay(DateTime.now().minus({ week: 1 }));
+            ).getWeekStatsByDay(DateTime.now().minus({ week: 1 }), body.FromZip);
             return this.createSuccessRes(phoneToScoreMap, phoneToNameMap);
         } catch (e: any) {
             console.error(JSON.stringify(e, null, 4));

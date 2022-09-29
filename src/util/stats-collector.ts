@@ -1,5 +1,5 @@
 import { DynamoDBDocumentClient, paginateQuery, paginateScan } from '@aws-sdk/lib-dynamodb';
-import { keys, mapValues } from 'lodash-es';
+import { entries, invertBy, keys, mapValues } from 'lodash-es';
 import { DateTime } from 'luxon';
 import * as zipcodeToTimezone from 'zipcode-to-timezone';
 import { USER_TABLE_NAME_KEY, WORDLE_STATS_TABLE_NAME_KEY } from '../../constants/table-names';
@@ -7,19 +7,18 @@ import { User } from '../model/user';
 import { WordleStat } from '../model/wordle-stat';
 import { EnvironmentVariableUtil } from '../util/env/environment-variable-util';
 
+export interface StatsCollection {
+    phoneToScoreMap: { [key: string]: number };
+    phoneToNameMap: { [key: string]: string };
+}
+
 export class StatsCollector {
     readonly SEPT_9_2022_ISO = '2022-09-09';
     readonly SEPT_9_2022_WORDLE_ID = 447;
 
     constructor(private dynamoClient: DynamoDBDocumentClient) {}
 
-    public async getWeekStatsByDay(
-        date: DateTime,
-        zipcode: string
-    ): Promise<{
-        phoneToScoreMap: { [key: string]: number };
-        phoneToNameMap: { [key: string]: string };
-    }> {
+    public async getWeekStatsByDay(date: DateTime, zipcode: string): Promise<StatsCollection> {
         const [wordleIdStart, wordleIdEnd] = this.getWordleIdRange(date, zipcode);
         console.log(`wordleIdStart: ${wordleIdStart} wordleIdEnd: ${wordleIdEnd}`);
         const stats = await this.getAllStats(wordleIdStart, wordleIdEnd);
@@ -32,6 +31,43 @@ export class StatsCollector {
             keys(phoneToScoreMap)
         );
         return { phoneToScoreMap, phoneToNameMap };
+    }
+
+    public getFormattedStatsMessage(
+        title: string,
+        collection: StatsCollection,
+        showMedal: boolean
+    ): string {
+        const scoreEntries = entries(invertBy(collection.phoneToScoreMap))
+            .map(
+                (entry) =>
+                    [
+                        +entry[0],
+                        entry[1].map((phone) => collection.phoneToNameMap[phone]).sort()
+                    ] as [number, string[]]
+            )
+            .sort((a, b) => a[0] - b[0]);
+        let message = title;
+        for (let i = 0; i < scoreEntries.length; ++i) {
+            const entry = scoreEntries[i];
+            for (const name of entry[1]) {
+                message += `\n   ${name}: ${entry[0]}${showMedal ? this.getMedal(i) : ''}`;
+            }
+        }
+        return message;
+    }
+
+    private getMedal(index: number): string {
+        switch (index) {
+            case 0:
+                return ' 🥇';
+            case 1:
+                return ' 🥈';
+            case 2:
+                return ' 🥉';
+            default:
+                return '';
+        }
     }
 
     private async getAllStats(wordleIdStart: number, wordleIdEnd: number): Promise<WordleStat[]> {

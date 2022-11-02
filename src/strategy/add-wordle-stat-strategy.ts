@@ -44,7 +44,7 @@ export class AddWordleStatStrategy extends BaseStrategy {
     }
 
     private getScoreValue(score: string): number {
-        return isNaN(+score) ? 8 : +score;
+        return isNaN(+score) ? 7 : +score;
     }
 
     private createNewSubmissionRes(wordleId: number, score: number): any {

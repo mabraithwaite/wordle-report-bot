@@ -22,9 +22,7 @@ exports.handler = async (event: any) => {
 
         if (method === 'POST' && event.path === '/twilio') {
             let twilioRes: any;
-            const body: TwilioRequestBody = queryString.parse(
-                event.body
-            ) as any as TwilioRequestBody;
+            const body: TwilioRequestBody = queryString.parse(event.body) as any as TwilioRequestBody;
             console.log(JSON.stringify(body, null, 4));
 
             for (const strategy of strategies) {

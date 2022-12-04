@@ -17,9 +17,7 @@ export class CurrentStatsStrategy extends BaseStrategy {
             const dynamoClient = DynamoDbClientFactory.getDynamoDbDocumentClient();
             const statsCollector = new StatsCollector(dynamoClient);
             const collection = await statsCollector.getWeekStatsByDay(DateTime.now(), body.FromZip);
-            return this.createTwilioRes(
-                statsCollector.getFormattedStatsMessage('Current scores:', collection, false)
-            );
+            return this.createTwilioRes(statsCollector.getFormattedStatsMessage('Current scores:', collection, false));
         } catch (e: any) {
             console.error(JSON.stringify(e, null, 4));
         }

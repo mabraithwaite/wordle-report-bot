@@ -24,9 +24,7 @@ export class AddWordleStatStrategy extends BaseStrategy {
 
                 await dynamoClient.send(
                     new PutCommand({
-                        TableName: EnvironmentVariableUtil.getVariableOrThrow(
-                            WORDLE_STATS_TABLE_NAME_KEY
-                        ),
+                        TableName: EnvironmentVariableUtil.getVariableOrThrow(WORDLE_STATS_TABLE_NAME_KEY),
                         Item: {
                             phoneNumber: body.From,
                             wordleId,

@@ -22,29 +22,16 @@ export class StatsCollector {
         const [wordleIdStart, wordleIdEnd] = this.getWordleIdRange(date, zipcode);
         console.log(`wordleIdStart: ${wordleIdStart} wordleIdEnd: ${wordleIdEnd}`);
         const stats = await this.getAllStats(wordleIdStart, wordleIdEnd);
-        const phoneToScoreMap: { [key: string]: number } = this.mapStatsToScoreMap(
-            wordleIdStart,
-            wordleIdEnd,
-            stats
-        );
-        const phoneToNameMap: { [key: string]: string } = await this.getPhoneToNameMap(
-            keys(phoneToScoreMap)
-        );
+        const phoneToScoreMap: { [key: string]: number } = this.mapStatsToScoreMap(wordleIdStart, wordleIdEnd, stats);
+        const phoneToNameMap: { [key: string]: string } = await this.getPhoneToNameMap(keys(phoneToScoreMap));
         return { phoneToScoreMap, phoneToNameMap };
     }
 
-    public getFormattedStatsMessage(
-        title: string,
-        collection: StatsCollection,
-        showMedal: boolean
-    ): string {
+    public getFormattedStatsMessage(title: string, collection: StatsCollection, showMedal: boolean): string {
         const scoreEntries = entries(invertBy(collection.phoneToScoreMap))
             .map(
                 (entry) =>
-                    [
-                        +entry[0],
-                        entry[1].map((phone) => collection.phoneToNameMap[phone]).sort()
-                    ] as [number, string[]]
+                    [+entry[0], entry[1].map((phone) => collection.phoneToNameMap[phone]).sort()] as [number, string[]]
             )
             .sort((a, b) => a[0] - b[0]);
         let message = title;
@@ -140,9 +127,7 @@ export class StatsCollector {
         }
         return mapValues(
             phoneToScoresMap,
-            (scores) =>
-                scores.reduce((p, c) => p + c, 0) +
-                8 * (wordleIdEnd - wordleIdStart + 1 - scores.length)
+            (scores) => scores.reduce((p, c) => p + c, 0) + 8 * (wordleIdEnd - wordleIdStart + 1 - scores.length)
         );
     }
 
@@ -162,10 +147,7 @@ export class StatsCollector {
 
     private getDaysSinceSept9(date: DateTime, timezone: string | undefined): number {
         return Math.floor(
-            date.diff(
-                DateTime.fromISO(this.SEPT_9_2022_ISO, { zone: timezone }).startOf('day'),
-                'days'
-            ).days
+            date.diff(DateTime.fromISO(this.SEPT_9_2022_ISO, { zone: timezone }).startOf('day'), 'days').days
         );
     }
 }

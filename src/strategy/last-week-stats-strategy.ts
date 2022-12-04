@@ -16,7 +16,7 @@ export class LastWeekStatsStrategy extends BaseStrategy {
         try {
             const dynamoClient = DynamoDbClientFactory.getDynamoDbDocumentClient();
             const statsCollector = new StatsCollector(dynamoClient);
-            const collection = await statsCollector.getWeekStatsByDay(DateTime.now().minus({ week: 1 }), body.FromZip);
+            const collection = await statsCollector.getWeekStatsByDay(DateTime.now().minus({ week: 1 }), body);
             return this.createTwilioRes(
                 statsCollector.getFormattedStatsMessage("Last week's scores:", collection, true)
             );

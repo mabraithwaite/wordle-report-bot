@@ -7,8 +7,8 @@
     "scripts": {
         "build": "tsc",
         "cdk": "cdk",
-        "format:test": "prettier {src,lib,constants,.}/**/*.ts --list-different",
-        "format:write": "prettier {src,lib,constants,.}/**/*.ts --write",
+        "format:test": "prettier {src,test,lib,constants,.}/**/*.ts --list-different",
+        "format:write": "prettier {src,test,lib,constants,.}/**/*.ts --write",
         "test": "jest",
         "watch": "tsc -w"
     },
@@ -34,6 +34,7 @@
         "@aws-sdk/client-dynamodb": "^3.165.0",
         "@aws-sdk/lib-dynamodb": "^3.165.0",
         "aws-cdk-lib": "2.37.1",
+        "city-timezones": "^1.2.1",
         "constructs": "^10.0.0",
         "lodash": "^4.17.21",
         "luxon": "^3.0.3",

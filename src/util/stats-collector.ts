@@ -1,11 +1,12 @@
 import { DynamoDBDocumentClient, paginateQuery, paginateScan } from '@aws-sdk/lib-dynamodb';
 import { entries, invertBy, keys, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
-import * as zipcodeToTimezone from 'zipcode-to-timezone';
 import { USER_TABLE_NAME_KEY, WORDLE_STATS_TABLE_NAME_KEY } from '../../constants/table-names';
+import { TwilioRequestBody } from '../model/twilio-request-body';
 import { User } from '../model/user';
 import { WordleStat } from '../model/wordle-stat';
 import { EnvironmentVariableUtil } from '../util/env/environment-variable-util';
+import { TimeZoneResolver } from './time-zone-resolver';
 
 export interface StatsCollection {
     phoneToScoreMap: { [key: string]: number };
@@ -16,10 +17,12 @@ export class StatsCollector {
     readonly SEPT_9_2022_ISO = '2022-09-09';
     readonly SEPT_9_2022_WORDLE_ID = 447;
 
+    private timeZoneResolver = TimeZoneResolver.getInstance();
+
     constructor(private dynamoClient: DynamoDBDocumentClient) {}
 
-    public async getWeekStatsByDay(date: DateTime, zipcode: string): Promise<StatsCollection> {
-        const [wordleIdStart, wordleIdEnd] = this.getWordleIdRange(date, zipcode);
+    public async getWeekStatsByDay(date: DateTime, requestBody: TwilioRequestBody): Promise<StatsCollection> {
+        const [wordleIdStart, wordleIdEnd] = this.getWordleIdRange(date, requestBody);
         console.log(`wordleIdStart: ${wordleIdStart} wordleIdEnd: ${wordleIdEnd}`);
         const stats = await this.getAllStats(wordleIdStart, wordleIdEnd);
         const phoneToScoreMap: { [key: string]: number } = this.mapStatsToScoreMap(wordleIdStart, wordleIdEnd, stats);
@@ -131,8 +134,8 @@ export class StatsCollector {
         );
     }
 
-    private getWordleIdRange(date: DateTime, zipcode: string): number[] {
-        const tz = zipcodeToTimezone.lookup(zipcode) || undefined;
+    private getWordleIdRange(date: DateTime, requestBody: TwilioRequestBody): number[] {
+        const tz = this.timeZoneResolver.getTimeZone(requestBody);
         const startDate = date.setZone(tz).startOf('week');
         let endDate;
         if (DateTime.now() < startDate.plus({ days: 6 })) {
@@ -145,9 +148,9 @@ export class StatsCollector {
         return [startDateId, endDateId];
     }
 
-    private getDaysSinceSept9(date: DateTime, timezone: string | undefined): number {
+    private getDaysSinceSept9(date: DateTime, timeZone: string | undefined): number {
         return Math.floor(
-            date.diff(DateTime.fromISO(this.SEPT_9_2022_ISO, { zone: timezone }).startOf('day'), 'days').days
+            date.diff(DateTime.fromISO(this.SEPT_9_2022_ISO, { zone: timeZone }).startOf('day'), 'days').days
         );
     }
 }

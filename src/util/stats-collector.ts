@@ -1,5 +1,5 @@
 import { DynamoDBDocumentClient, paginateQuery, paginateScan } from '@aws-sdk/lib-dynamodb';
-import { entries, invertBy, keys, mapValues } from 'lodash-es';
+import { entries, invertBy, keys, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import * as zipcodeToTimezone from 'zipcode-to-timezone';
 import { USER_TABLE_NAME_KEY, WORDLE_STATS_TABLE_NAME_KEY } from '../../constants/table-names';
